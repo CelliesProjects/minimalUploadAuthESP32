@@ -14,9 +14,10 @@ const char* ssid          = "----------";
 const char* password      = "----------";
 const char* http_username = "admin";
 const char* http_password = "admin";
+const size_t MAX_FILESIZE = 1024 * 1024 * 5;
 
 AsyncWebServer server(80);
- 
+
 void setup() {
   Serial.begin( 115200 );
 
@@ -28,55 +29,45 @@ void setup() {
     return;
   }
 
-  server.on( "/", HTTP_GET, []( AsyncWebServerRequest * request )
+  server.on("/", HTTP_GET, []( AsyncWebServerRequest * request)
   {
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", upload_htm, upload_htm_len);
-    response->addHeader("Server","ESP Async Web Server");
+    response->addHeader("Server", "ESP Async Web Server");
     request->send(response);
   });
-  
-  server.on( "/api/upload", HTTP_POST, []( AsyncWebServerRequest * request )
+
+  server.on("/api/upload", HTTP_POST, []( AsyncWebServerRequest * request)
   {
-    if ( request->authenticate( http_username, http_password ) )
-    {
-      request->send( 200 );
-    }
+    if (request->authenticate(http_username, http_password))
+      request->send(200);
     else
-    {
       request->requestAuthentication();
-    }
   },
-  []( AsyncWebServerRequest * request, String filename, size_t index, uint8_t *data, size_t len, bool final )
+  [](AsyncWebServerRequest * request, String filename, size_t index, uint8_t *data, size_t len, bool final)
   {
-    static bool   _authenticated;
     static time_t startTimer;
-
-    if ( !index )
-    {
-      _authenticated = false;
-      if ( request->authenticate(http_username, http_password) )
-      {
-        startTimer = millis();
-        Serial.printf( "UPLOAD: Started to receive '%s'.\n", filename.c_str() );
-        _authenticated = true;
+    if (!index) {
+      if (!request->authenticate(http_username, http_password)) {
+        request->requestAuthentication();
+        return;
       }
-      else
-      {
-        Serial.println( "Unauthorized access." );
-        return request->send( 401, "text/plain", "Not logged in." );
-      }      
+      startTimer = millis();
+      if (request->hasHeader("Content-Length") && request->header("Content-Length").toInt() > MAX_FILESIZE) {
+        char content[70];
+        snprintf(content, sizeof(content), "File too large. (%s bytes)<br>Max size is %i bytes", request->header("Content-Length"), MAX_FILESIZE);
+        request->send(400, "text/html", content);
+        request->client()->close();
+        Serial.printf(content);
+        return;
+      }
+      Serial.printf("UPLOAD: %s starting upload\n", filename.c_str());
     }
 
-    if ( _authenticated )
-    {
-      //Serial.printf( "%i bytes received.\n", index );
-      //Store or do something with the data...
-    }
-    
-    if ( final && _authenticated )
-    {
-      Serial.printf( "UPLOAD: Done. Received %.2f kBytes in %.2fs which is %i kB/s.\n", index / 1024.0, ( millis() - startTimer ) / 1000.0, index / ( millis() - startTimer ) );
-    }
+    //Store or do something with the data...
+    //Serial.printf("file: '%s' %i bytes\ttotal: %i\n", filename.c_str(), len, index + len);
+
+    if (final)
+      Serial.printf( "UPLOAD: %s Done.\nReceived %.2f kBytes in %.2fs which is %.2f kB/s.\n", filename.c_str(), index / 1024.0, ( millis() - startTimer ) / 1000.0, 1.0 * index / ( millis() - startTimer ) );
   });
 
   server.onNotFound( []( AsyncWebServerRequest * request )

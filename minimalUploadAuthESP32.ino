@@ -67,7 +67,7 @@ void setup() {
         Serial.printf("UPLOAD: fileSize:%s\n", request->header(fileSizeHeader));
         if (request->header(fileSizeHeader).toInt() > MAX_FILESIZE) {
           char content[70];
-          snprintf(content, sizeof(content), "File too large. (%s)<br>Max upload size is %s", humanReadableSize(request->header("Content-Length").toInt()), humanReadableSize(MAX_FILESIZE));
+          snprintf(content, sizeof(content), "File too large. (%s)<br>Max upload size is %s", humanReadableSize(request->header(fileSizeHeader).toInt()), humanReadableSize(MAX_FILESIZE));
           request->send(400, "text/html", content);
           request->client()->close();
           Serial.printf("UPLOAD: Aborted upload of '%s' because file too big.\n", filename.c_str());

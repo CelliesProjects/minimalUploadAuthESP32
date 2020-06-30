@@ -4,6 +4,7 @@
 <head>
 <title>TEST UPLOAD</title>
 <meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link rel="icon" href="data:;base64,iVBORw0KGgo=">  <!--prevent favicon requests-->
 <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
 <style>
@@ -46,8 +47,7 @@ button{
 <script type="text/javascript">
 
 const pickFile_Message = "Click or drop a file in the box";
-
-$("#status").html( pickFile_Message );
+$("#status").html(pickFile_Message);
 
 function uploadProgressHandler(event)
 {
@@ -55,7 +55,7 @@ function uploadProgressHandler(event)
   var percent = (event.loaded / event.total) * 100;
   var progress = Math.round(percent);
   $("#status").html(progress +"% uploaded... please wait");
-  $( '#uploadProgressBar' ).attr({
+  $('#uploadProgressBar').attr({
     value: event.loaded,
     max: event.total
   });
@@ -63,83 +63,81 @@ function uploadProgressHandler(event)
 
 function loadHandler(event)
 {
-  if ( event.target.responseText )
-  {
-    $("#status").html( event.target.responseText );
-  }
+  if (event.target.responseText)
+    $("#status").html(event.target.responseText);
   else
-  {
-    $("#status").html( pickFile_Message );
-  }
+    $("#status").html(pickFile_Message);
   $('#uploadFileButton').val("Upload");
-  $( '#uploadProgressBar' ).attr({
+  $('#uploadProgressBar').attr({
     value: 0,
     max: 0
   });
 }
 
 
-function errorHandler(event){
+function errorHandler(event)
+{
   $("#status").html("Upload failed");
 }
 
 
-function abortHandler(event){
+function abortHandler(event)
+{
   $("#status").html("Upload aborted");
 }
 
 
-$('#fileSelection').on( 'change', function(){
-  if ( $('#fileSelection').val() != "" ) {
-    $('#uploadFileButton').val("Upload").prop( 'disabled', false );
-  }
+$('#fileSelection').on('change', function()
+{
+  if ($('#fileSelection').val() != "")
+    $('#uploadFileButton').val("Upload").prop('disabled', false);
   else
-  {
-    $('#uploadFileButton').val("Upload").prop( 'disabled', true );
-  }
+    $('#uploadFileButton').val("Upload").prop('disabled', true);
 });
 
 
 $("#uploadFileButton").click(function(event)
 {
   event.preventDefault();
-  if ( $( '#fileSelection' ).val() == "" ) { return; }
-
-  //TODO: first do a post without data to see if we are logged in
-  $.post( '/api/upload', function() {
-    //alert( "success" );
+  if ($('#fileSelection').val() == "") {return;}
+  $.post('/api/upload', function() {
+    //alert("success");
   })
-    .done(function() {
-      $('#uploadFileButton').val("Uploading...").prop( 'disabled', true );
-      var file = $("#fileSelection")[0].files[0];
-      $("#fileSelection").val("");
-      var formData = new FormData();
-      formData.append("file1", file);      
-      $.ajax({
-        url: '/api/upload',
-        method: 'POST',
-        type: 'POST',
-        data: formData,
-        contentType: false,
-        processData: false,
-        xhr: function()
-        {
-          var xhr = new window.XMLHttpRequest();
-          xhr.upload.addEventListener("progress",
-                                      uploadProgressHandler,
-                                      false
-                                     );
-          xhr.addEventListener("load", loadHandler, false);
-          xhr.addEventListener("error", errorHandler, false);
-          xhr.addEventListener("abort", abortHandler, false);
+  .done(function() {
+    $('#uploadFileButton').val("Uploading...").prop('disabled', true);
+    var file = $("#fileSelection")[0].files[0];
+    var size =$("#fileSelection")[0].files[0].size;
+    $("#fileSelection").val("");
+    var formData = new FormData();
+    formData.append("file1", file);
+    $.ajax({
+      url: '/api/upload',
+      beforeSend: function(request) {
+        request.setRequestHeader("FileSize",size);
+      },
+      method: 'POST',
+      type: 'POST',
+      data: formData,
+      contentType: false,
+      processData: false,
+      xhr: function()
+      {
+        var xhr = new window.XMLHttpRequest();
+        xhr.upload.addEventListener("progress",
+                                    uploadProgressHandler,
+                                    false
+                                  );
+        xhr.addEventListener("load", loadHandler, false);
+        xhr.addEventListener("error", errorHandler, false);
+        xhr.addEventListener("abort", abortHandler, false);
 
-          return xhr;
-        }
-      });
-    })
-    .fail(function() {
-      $('#status').html( "Not logged in." );
+        return xhr;
+      }
     });
+  })
+  .fail(function() {
+    $('#status').html("Not logged in.");
+  });
 });
 </script>
 </body>

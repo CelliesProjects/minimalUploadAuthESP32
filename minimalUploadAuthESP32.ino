@@ -1,6 +1,6 @@
 /****************************************************************************
 
-       Upload a file to esp32 with authorization
+       POC to upload a file to esp32 with authorization
 
        Browse to your esp32 to upload files
 
@@ -10,8 +10,9 @@
 
 #include "upload_htm.h"
 
-const char* ssid          = "----------";
-const char* password      = "----------";
+//const char* ssid          = "----------";
+const char* ssid          = "huiskamer";
+const char* password      = "0987654321";
 const char* http_username = "admin";
 const char* http_password = "admin";
 const size_t MAX_FILESIZE = 1024 * 1024 * 5;
@@ -56,13 +57,16 @@ void setup() {
     if (!request->authenticate(http_username, http_password))
       request->requestAuthentication();
 
+// https://javascript.info/formdata
+
     static time_t startTimer;
     if (!index) {
       startTimer = millis();
+      const char * fileSizeHeader{"FileSize"};
       Serial.printf("UPLOAD: %s starting upload\n", filename.c_str());
-      if (request->hasHeader("Content-Length")) {
-        Serial.printf("UPLOAD: Content-Length:%s\n", request->header("Content-Length"));
-        if (request->header("Content-Length").toInt() > MAX_FILESIZE) {
+      if (request->hasHeader(fileSizeHeader)) {
+        Serial.printf("UPLOAD: fileSize:%s\n", request->header(fileSizeHeader));
+        if (request->header(fileSizeHeader).toInt() > MAX_FILESIZE) {
           char content[70];
           snprintf(content, sizeof(content), "File too large. (%s)<br>Max upload size is %s", humanReadableSize(request->header("Content-Length").toInt()), humanReadableSize(MAX_FILESIZE));
           request->send(400, "text/html", content);
@@ -72,12 +76,14 @@ void setup() {
         }
       }
     }
-
     //Store or do something with the data...
-    //Serial.printf("file: '%s' %i bytes\ttotal: %i\n", filename.c_str(), len, index + len);
+    //Serial.printf("file: '%s' received %i bytes\ttotal: %i\n", filename.c_str(), len, index + len);
 
     if (final)
-      Serial.printf("UPLOAD: %s Done.\nReceived %.2f kBytes in %.2fs which is %.2f kB/s.\n", filename.c_str(), index / 1024.0, (millis() - startTimer) / 1000.0, 1.0 * index / (millis() - startTimer));
+      Serial.printf("UPLOAD: %s Done. Received %i bytes in %.2fs which is %.2f kB/s.\n", filename.c_str(),
+                    index + len,
+                    (millis() - startTimer) / 1000.0,
+                    1.0 * (index + len) / (millis() - startTimer));
   });
 
   server.onNotFound([](AsyncWebServerRequest * request)
@@ -102,6 +108,9 @@ void setup() {
     Serial.printf(" http://%s%s\n", request->host().c_str(), request->url().c_str());
     request->send(404, "text/plain", "Not found.");
   });
+
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+ // DefaultHeaders::Instance().addHeader("Access-Control-Expose-Headers", "Content-Length");
 
   server.begin();
 

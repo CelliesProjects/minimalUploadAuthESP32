@@ -10,9 +10,8 @@
 
 #include "upload_htm.h"
 
-//const char* ssid          = "----------";
-const char* ssid          = "huiskamer";
-const char* password      = "0987654321";
+const char* ssid          = "----------";
+const char* password      = "----------";
 const char* http_username = "admin";
 const char* http_password = "admin";
 const size_t MAX_FILESIZE = 1024 * 1024 * 5;

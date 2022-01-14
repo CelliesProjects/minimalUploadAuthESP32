@@ -1,143 +1,133 @@
 <!doctype HTML>
-<!-- https://stackoverflow.com/questions/15410265/file-upload-progress-bar-with-jquery -->
 <html lang="en">
 <head>
 <title>TEST UPLOAD</title>
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link rel="icon" href="data:;base64,iVBORw0KGgo=">  <!--prevent favicon requests-->
-<script src="https://code.jquery.com/jquery-3.2.1.js"></script>
 <style>
 button{
-  margin:10px;
+    margin:10px;
 }
-
 #uploadForm {
-    width: 350px;
-    margin: 0 auto;
-    background-color: beige;
-    padding: 10px;
+    width:350px;
+    margin:0 auto;
+    background-color:beige;
     text-align:center;
 }
-
+#title{
+    text-align:center;
+    margin:5px;
+}
 #uploadForm #fileSelection{
-    width: 100%;
-    height: 50px;
-    border: solid 1px lightgrey;
+    height:50px;
+    border:solid 1px lightgrey;
 }
-
 #uploadProgressBar{
-    margin: 10px;
+    margin:10px;
 }
-
 #uploadFileButton{
-    width: 100px;
-    height: 30px;
-    margin: 10px;
+    width:100px;
+    height:30px;
+    margin:10px;
+}
+#status{
+    margin:5px;
+}
+.credentials{
+    margin:2px;
+    display:flex;
+}
+#username, #password {
+    width:48%;
+    margin:5px;
+    text-align:center;
 }
 </style>
 </head>
 <body>
-  <form id="uploadForm" enctype="multipart/form-data" method="post" action="api/upload">
-  <input id="fileSelection" name="file" type="file" />
-  <progress id="uploadProgressBar" value="0" max="0"></progress>
-  <p id="status"></p>
-  <input id="uploadFileButton" type="submit" value="Upload" disabled="disabled"/>
-  </form>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <p id="title">Simple authenticated upload example<br>for ESP32 and ESPAsyncWebServer</p>
+        <p class="credentials">
+            <input type="text" id="username" name="username" placeholder="username">
+            <input type="password" id="password" name="password" placeholder="password">
+        </p>
+        <input id="fileSelection" name="file" type="file" />
+        <progress id="uploadProgressBar" value="0" max="0"></progress>
+        <p id="status">&nbsp;</p>
+        <input id="uploadFileButton" type="submit" value="Upload" disabled="disabled"/>
+    </form>
 <script type="text/javascript">
 
-const pickFile_Message = "Click or drop a file in the box";
-$("#status").html(pickFile_Message);
-
-function uploadProgressHandler(event)
-{
-  //$("#loaded_n_total").html("Uploaded "+event.loaded+" bytes of "+event.total);
-  var percent = (event.loaded / event.total) * 100;
-  var progress = Math.round(percent);
-  $("#status").html(progress +"% uploaded... please wait");
-  $('#uploadProgressBar').attr({
-    value: event.loaded,
-    max: event.total
-  });
+function uploadProgressHandler(event) {
+    const percent = (event.loaded / event.total) * 100;
+    document.getElementById('status').innerHTML = Math.round(percent) + "% uploaded... please wait";
+    var progress = document.getElementById('uploadProgressBar');
+    progress.setAttribute("value", event.loaded);
+    progress.setAttribute("max", event.total);
 }
 
-function loadHandler(event)
-{
-  if (event.target.responseText)
-    $("#status").html(event.target.responseText);
-  else
-    $("#status").html(pickFile_Message);
-  $('#uploadFileButton').val("Upload");
-  $('#uploadProgressBar').attr({
-    value: 0,
-    max: 0
-  });
-}
+function startUpload() {
+    let data = new FormData();
+    data.append('file', document.getElementById('fileSelection').files[0]);
 
+    let request = new XMLHttpRequest();
+    request.onerror = function() {
+        console.log("** An error occurred during the transaction");
+    }
+    request.open('POST', '/api/upload');
 
-function errorHandler(event)
-{
-  $("#status").html("Upload failed");
-}
+    const user = document.getElementById('username').value;
+    const pw = document.getElementById('password').value;
 
+    request.setRequestHeader('Authorization', 'Basic ' + btoa(user + ":" + pw));
 
-function abortHandler(event)
-{
-  $("#status").html("Upload aborted");
-}
+    const file = document.getElementById('fileSelection').files[0];
+    request.setRequestHeader('FileSize', file.size);
 
+    request.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            document.getElementById('status').innerHTML = "&nbsp;";
+            window.fileSelection.value = '';
+            window.uploadFileButton.disabled = "disabled";
+        }
+        else if (this.readyState == 4) {
+            console.log("problemo " + this.status);
+            switch (this.status) {
+                case 400 :
+                    document.getElementById('status').innerHTML = this.responseText;
+                    break
+                case 401 :
+                    document.getElementById('status').innerHTML = "Enter valid username and password";
+                    break;
+                default : // do nothing
+            }
+        }
+    };
 
-$('#fileSelection').on('change', function()
-{
-  if ($('#fileSelection').val() != "")
-    $('#uploadFileButton').val("Upload").prop('disabled', false);
-  else
-    $('#uploadFileButton').val("Upload").prop('disabled', true);
-});
+    request.upload.addEventListener("progress", uploadProgressHandler, false);
 
-
-$("#uploadFileButton").click(function(event)
-{
-  event.preventDefault();
-  if ($('#fileSelection').val() == "") {return;}
-  $.post('/api/upload', function() {
-    //alert("success");
-  })
-  .done(function() {
-    $('#uploadFileButton').val("Uploading...").prop('disabled', true);
-    var file = $("#fileSelection")[0].files[0];
-    var size =$("#fileSelection")[0].files[0].size;
-    $("#fileSelection").val("");
-    var formData = new FormData();
-    formData.append("file1", file);
-    $.ajax({
-      url: '/api/upload',
-      beforeSend: function(request) {
-        request.setRequestHeader("FileSize",size);
-      },
-      method: 'POST',
-      type: 'POST',
-      data: formData,
-      contentType: false,
-      processData: false,
-      xhr: function()
-      {
-        var xhr = new window.XMLHttpRequest();
-        xhr.upload.addEventListener("progress",
-                                    uploadProgressHandler,
-                                    false
-                                  );
-        xhr.addEventListener("load", loadHandler, false);
-        xhr.addEventListener("error", errorHandler, false);
-        xhr.addEventListener("abort", abortHandler, false);
-
-        return xhr;
-      }
+    request.addEventListener('load', function() {
+        var progress = document.getElementById('uploadProgressBar');
+        progress.setAttribute("value", 0);
+        progress.setAttribute("max", 0);
     });
-  })
-  .fail(function() {
-    $('#status').html("Not logged in.");
-  });
+
+    document.getElementById("status").innerHTML = "Starting upload";
+
+    request.send(data);
+}
+
+document.getElementById("fileSelection").addEventListener("change", function() {
+    if (!window.fileSelection.files[0]) return;
+    document.getElementById("uploadFileButton").disabled = false;
+    document.getElementById("status").innerHTML = "&nbsp;";
 });
+
+document.getElementById("uploadFileButton").addEventListener("click", function(event){
+    event.preventDefault();
+    startUpload();
+});
+
 </script>
 </body>

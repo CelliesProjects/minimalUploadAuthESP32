@@ -76,6 +76,7 @@ function startUpload() {
         console.log("** An error occurred during the transaction");
     }
     request.open('POST', '/api/upload');
+    //request.open('POST', 'http://192.168.0.106/api/upload'); //debug/remote running of this page
 
     const user = document.getElementById('username').value;
     const pw = document.getElementById('password').value;
@@ -86,21 +87,20 @@ function startUpload() {
     request.setRequestHeader('FileSize', file.size);
 
     request.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            document.getElementById('status').innerHTML = "&nbsp;";
-            window.fileSelection.value = '';
-            window.uploadFileButton.disabled = "disabled";
-        }
-        else if (this.readyState == 4) {
-            console.log("problemo " + this.status);
+        if (this.readyState == 4) {
             switch (this.status) {
+                case 200 :
+                    document.getElementById('status').innerHTML = "&nbsp;";
+                    window.fileSelection.value = '';
+                    window.uploadFileButton.disabled = "disabled";
+                    break;
                 case 400 :
                     document.getElementById('status').innerHTML = this.responseText;
                     break
                 case 401 :
                     document.getElementById('status').innerHTML = "Enter valid username and password";
                     break;
-                default : // do nothing
+                default : console.log("problemo " + this.status);
             }
         }
     };

@@ -6,3 +6,6 @@ A simple Arduino IDE authorized upload example for ESP32 with `ESPAsyncWebServer
 - Change your network credentials in `minimalUploadAuthESP32.ino`.
 - Set a `MAX_FILESIZE` in `minimalUploadAuthESP32.ino`.
 - Flash your ESP and browse to the ESP web page.
+
+## On the file size
+The standard `Content-Length` header gives a wrong filesize, so a custom `FileSize` header is used instead.

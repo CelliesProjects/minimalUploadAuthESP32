@@ -92,17 +92,18 @@ function startUpload() {
                 case 200 :
                     document.getElementById('status').innerHTML = "Upload succes!";
                     window.fileSelection.value = '';
-                    window.uploadFileButton.disabled = "disabled";
+                    window.uploadFileButton.disabled = true;
                     break;
                 case 400 :
                     document.getElementById('status').innerHTML = this.responseText;
                     break
                 case 401 :
                     document.getElementById('status').innerHTML = "Enter valid username and password";
+                    window.uploadFileButton.disabled = false;
                     break;
                 default : console.log("problemo " + this.status);
             }
-            document.getElementById("fileSelection").disabled = false;
+            window.fileSelection.disabled = false;
         }
     };
 

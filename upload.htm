@@ -61,7 +61,7 @@ button{
 
 function uploadProgressHandler(event) {
     const percent = (event.loaded / event.total) * 100;
-    document.getElementById('status').innerHTML = Math.round(percent) + "% uploaded... please wait";
+    document.getElementById('status').innerHTML = Math.round(percent) + "% uploaded. Please wait...";
     var progress = document.getElementById('uploadProgressBar');
     progress.setAttribute("value", event.loaded);
     progress.setAttribute("max", event.total);
@@ -90,7 +90,7 @@ function startUpload() {
         if (this.readyState == 4) {
             switch (this.status) {
                 case 200 :
-                    document.getElementById('status').innerHTML = "&nbsp;";
+                    document.getElementById('status').innerHTML = "Upload succes!";
                     window.fileSelection.value = '';
                     window.uploadFileButton.disabled = "disabled";
                     break;
@@ -102,6 +102,7 @@ function startUpload() {
                     break;
                 default : console.log("problemo " + this.status);
             }
+            document.getElementById("fileSelection").disabled = false;
         }
     };
 
@@ -114,17 +115,21 @@ function startUpload() {
     });
 
     document.getElementById("status").innerHTML = "Starting upload";
-
     request.send(data);
 }
 
 document.getElementById("fileSelection").addEventListener("change", function() {
-    if (!window.fileSelection.files[0]) return;
+    if (!window.fileSelection.files[0]) {
+        document.getElementById("uploadFileButton").disabled = true;
+        return;
+    }
     document.getElementById("uploadFileButton").disabled = false;
     document.getElementById("status").innerHTML = "&nbsp;";
 });
 
 document.getElementById("uploadFileButton").addEventListener("click", function(event){
+    document.getElementById("uploadFileButton").disabled = true;
+    document.getElementById("fileSelection").disabled = true;
     event.preventDefault();
     startUpload();
 });

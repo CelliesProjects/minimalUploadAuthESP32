@@ -92,18 +92,20 @@ function startUpload() {
                 case 200 :
                     document.getElementById('status').innerHTML = "Upload succes!";
                     window.fileSelection.value = '';
+                    window.fileSelection.disabled = false;
                     window.uploadFileButton.disabled = true;
                     break;
                 case 400 :
                     document.getElementById('status').innerHTML = this.responseText;
+                    window.fileSelection.disabled = false;
                     break
                 case 401 :
                     document.getElementById('status').innerHTML = "Enter valid username and password";
+                    window.fileSelection.disabled = false;
                     window.uploadFileButton.disabled = false;
                     break;
                 default : console.log("problemo " + this.status);
             }
-            window.fileSelection.disabled = false;
         }
     };
 
@@ -121,16 +123,17 @@ function startUpload() {
 
 document.getElementById("fileSelection").addEventListener("change", function() {
     if (!window.fileSelection.files[0]) {
-        document.getElementById("uploadFileButton").disabled = true;
+        window.uploadFileButton.disabled = true;
+        document.getElementById("status").innerHTML = "&nbsp;";
         return;
     }
-    document.getElementById("uploadFileButton").disabled = false;
+    window.uploadFileButton.disabled = false;
     document.getElementById("status").innerHTML = "&nbsp;";
 });
 
 document.getElementById("uploadFileButton").addEventListener("click", function(event){
-    document.getElementById("uploadFileButton").disabled = true;
-    document.getElementById("fileSelection").disabled = true;
+    window.uploadFileButton.disabled = true;
+    window.fileSelection.disabled = true;
     event.preventDefault();
     startUpload();
 });

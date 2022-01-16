@@ -59,14 +59,6 @@ button{
     </form>
 <script type="text/javascript">
 
-function uploadProgressHandler(event) {
-    const percent = (event.loaded / event.total) * 100;
-    window.statusText.innerHTML = Math.round(percent) + '% uploaded. Please wait...';
-    let progress = window.uploadProgressBar;
-    progress.setAttribute('value', event.loaded);
-    progress.setAttribute('max', event.total);
-}
-
 function startUpload() {
     let request = new XMLHttpRequest();
 
@@ -97,7 +89,13 @@ function startUpload() {
         }
     };
 
-    request.upload.addEventListener('progress', uploadProgressHandler, false);
+    request.upload.addEventListener('progress', function(event) {
+        const percent = (event.loaded / event.total) * 100;
+        window.statusText.innerHTML = Math.round(percent) + '% uploaded. Please wait...';
+        let progress = window.uploadProgressBar;
+        progress.setAttribute('value', event.loaded);
+        progress.setAttribute('max', event.total);
+    });
 
     request.addEventListener('load', function() {
         let progress = document.getElementById('uploadProgressBar');
@@ -108,9 +106,7 @@ function startUpload() {
     request.open('POST', '/api/upload');
     //request.open('POST', 'http://192.168.0.106/api/upload'); //debug/remote running of this page
 
-    const user = window.username.value;
-    const pw = window.password.value;
-    request.setRequestHeader('Authorization', 'Basic ' + btoa(user + ":" + pw));
+    request.setRequestHeader('Authorization', 'Basic ' + btoa(window.username.value + ":" + window.password.value));
 
     const file = window.fileSelection.files[0];
     request.setRequestHeader('FileSize', file.size);

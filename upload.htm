@@ -1,27 +1,25 @@
 <!doctype HTML>
 <html lang="en">
 <head>
-<title>TEST UPLOAD</title>
+<title>ESP32 UPLOAD</title>
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link rel="icon" href="data:;base64,iVBORw0KGgo=">  <!--prevent favicon requests-->
 <style>
-button{
-    margin:10px;
-}
 #uploadForm {
     width:350px;
     margin:0 auto;
     background-color:beige;
     text-align:center;
+    border:solid 1px black;
 }
 #title{
     text-align:center;
     margin:5px;
 }
-#uploadForm #fileSelection{
+#fileSelection{
     height:50px;
-    border:solid 1px lightgrey;
+    border:solid 1px black;
 }
 #uploadProgressBar{
     margin:10px;
@@ -34,7 +32,7 @@ button{
 #statusText{
     margin:5px;
 }
-.credentials{
+#credentials{
     margin:2px;
     display:flex;
 }
@@ -48,7 +46,7 @@ button{
 <body>
     <form id="uploadForm" enctype="multipart/form-data">
         <p id="title">Simple authenticated upload example<br>for ESP32 and ESPAsyncWebServer</p>
-        <p class="credentials">
+        <p id="credentials">
             <input type="text" id="username" name="username" placeholder="username">
             <input type="password" id="password" name="password" placeholder="password">
         </p>
@@ -98,7 +96,7 @@ function startUpload() {
     });
 
     request.addEventListener('load', function() {
-        let progress = document.getElementById('uploadProgressBar');
+        let progress = window.uploadProgressBar;
         progress.setAttribute('value', 0);
         progress.setAttribute('max', 0);
     });

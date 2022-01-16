@@ -31,7 +31,7 @@ button{
     height:30px;
     margin:10px;
 }
-#status{
+#statusText{
     margin:5px;
 }
 .credentials{
@@ -54,87 +54,84 @@ button{
         </p>
         <input id="fileSelection" name="file" type="file" />
         <progress id="uploadProgressBar" value="0" max="0"></progress>
-        <p id="status">&nbsp;</p>
+        <p id="statusText">&nbsp;</p>
         <input id="uploadFileButton" type="submit" value="Upload" disabled="disabled"/>
     </form>
 <script type="text/javascript">
 
 function uploadProgressHandler(event) {
     const percent = (event.loaded / event.total) * 100;
-    document.getElementById('status').innerHTML = Math.round(percent) + "% uploaded. Please wait...";
-    var progress = document.getElementById('uploadProgressBar');
-    progress.setAttribute("value", event.loaded);
-    progress.setAttribute("max", event.total);
+    window.statusText.innerHTML = Math.round(percent) + '% uploaded. Please wait...';
+    let progress = window.uploadProgressBar;
+    progress.setAttribute('value', event.loaded);
+    progress.setAttribute('max', event.total);
 }
 
 function startUpload() {
-    let data = new FormData();
-    data.append('file', document.getElementById('fileSelection').files[0]);
-
     let request = new XMLHttpRequest();
+
     request.onerror = function() {
-        console.log("** An error occurred during the transaction");
+        console.log('An error occurred during the transaction');
     }
-    request.open('POST', '/api/upload');
-    //request.open('POST', 'http://192.168.0.106/api/upload'); //debug/remote running of this page
-
-    const user = document.getElementById('username').value;
-    const pw = document.getElementById('password').value;
-
-    request.setRequestHeader('Authorization', 'Basic ' + btoa(user + ":" + pw));
-
-    const file = document.getElementById('fileSelection').files[0];
-    request.setRequestHeader('FileSize', file.size);
 
     request.onreadystatechange = function() {
         if (this.readyState == 4) {
             switch (this.status) {
                 case 200 :
-                    document.getElementById('status').innerHTML = "Upload succes!";
+                    window.statusText.innerHTML = 'Upload succes!';
                     window.fileSelection.value = '';
                     window.fileSelection.disabled = false;
                     window.uploadFileButton.disabled = true;
                     break;
                 case 400 :
-                    document.getElementById('status').innerHTML = this.responseText;
+                    window.statusText.innerHTML = this.responseText;
                     window.fileSelection.disabled = false;
                     break
                 case 401 :
-                    document.getElementById('status').innerHTML = "Enter valid username and password";
+                    window.statusText.innerHTML = 'Enter valid username and password';
                     window.fileSelection.disabled = false;
                     window.uploadFileButton.disabled = false;
                     break;
-                default : console.log("problemo " + this.status);
+                default : console.log('problemo ' + this.status);
             }
         }
     };
 
-    request.upload.addEventListener("progress", uploadProgressHandler, false);
+    request.upload.addEventListener('progress', uploadProgressHandler, false);
 
     request.addEventListener('load', function() {
-        var progress = document.getElementById('uploadProgressBar');
-        progress.setAttribute("value", 0);
-        progress.setAttribute("max", 0);
+        let progress = document.getElementById('uploadProgressBar');
+        progress.setAttribute('value', 0);
+        progress.setAttribute('max', 0);
     });
 
-    document.getElementById("status").innerHTML = "Starting upload";
+    request.open('POST', '/api/upload');
+    //request.open('POST', 'http://192.168.0.106/api/upload'); //debug/remote running of this page
+
+    const user = window.username.value;
+    const pw = window.password.value;
+    request.setRequestHeader('Authorization', 'Basic ' + btoa(user + ":" + pw));
+
+    const file = window.fileSelection.files[0];
+    request.setRequestHeader('FileSize', file.size);
+
+    let data = new FormData();
+    data.append('file', file);
+
+    window.statusText.innerHTML = 'Starting upload';
+
     request.send(data);
 }
 
-document.getElementById("fileSelection").addEventListener("change", function() {
-    if (!window.fileSelection.files[0]) {
-        window.uploadFileButton.disabled = true;
-        document.getElementById("status").innerHTML = "&nbsp;";
-        return;
-    }
-    window.uploadFileButton.disabled = false;
-    document.getElementById("status").innerHTML = "&nbsp;";
+document.getElementById('fileSelection').addEventListener('change', function() {
+    window.uploadFileButton.disabled = this.files[0] ? false : true;
+    window.statusText.innerHTML = '&nbsp;';
 });
 
-document.getElementById("uploadFileButton").addEventListener("click", function(event){
-    window.uploadFileButton.disabled = true;
-    window.fileSelection.disabled = true;
+document.getElementById('uploadFileButton').addEventListener('click', function(event){
     event.preventDefault();
+    this.disabled = true;
+    window.fileSelection.disabled = true;
     startUpload();
 });
 

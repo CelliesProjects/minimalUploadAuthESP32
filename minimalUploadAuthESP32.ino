@@ -75,7 +75,7 @@ void setup() {
 
         // https://javascript.info/formdata
 
-        static time_t startTimer;
+        static unsigned long startTimer;
         if (!index) {
             startTimer = millis();
             const char* FILESIZE_HEADER{"FileSize"};

@@ -79,25 +79,29 @@ void setup() {
         if (!index) {
             startTimer = millis();
             const char* FILESIZE_HEADER{"FileSize"};
-            Serial.printf("UPLOAD: Receiving: '%s'\n", filename.c_str());
-            if (request->hasHeader(FILESIZE_HEADER)) {
-                Serial.printf("UPLOAD: fileSize: %s\n", request->header(FILESIZE_HEADER));
-                if (request->header(FILESIZE_HEADER).toInt() >= MAX_FILESIZE) {
-                    request->send(400, MIMETYPE_HTML,
-                                  "Too large. (" + humanReadableSize(request->header(FILESIZE_HEADER).toInt()) +
-                                  ") Max size is " + humanReadableSize(MAX_FILESIZE) + ".");
 
-                    request->client()->close();
-                    Serial.printf("UPLOAD: Aborted upload because filesize limit.\n");
-                    return;
-                }
-            } else {
+            Serial.printf("UPLOAD: Receiving: '%s'\n", filename.c_str());
+
+            if (!request->hasHeader(FILESIZE_HEADER)) {
                 request->send(400, MIMETYPE_HTML, "No filesize header present!");
                 request->client()->close();
                 Serial.printf("UPLOAD: Aborted upload because missing filesize header.\n");
                 return;
             }
+
+            Serial.printf("UPLOAD: fileSize: %s\n", request->header(FILESIZE_HEADER));
+
+            if (request->header(FILESIZE_HEADER).toInt() >= MAX_FILESIZE) {
+                request->send(400, MIMETYPE_HTML,
+                              "Too large. (" + humanReadableSize(request->header(FILESIZE_HEADER).toInt()) +
+                              ") Max size is " + humanReadableSize(MAX_FILESIZE) + ".");
+
+                request->client()->close();
+                Serial.printf("UPLOAD: Aborted upload because filesize limit.\n");
+                return;
+            }
         }
+
         //Store or do something with the data...
         //Serial.printf("file: '%s' received %i bytes\ttotal: %i\n", filename.c_str(), len, index + len);
 

@@ -61,10 +61,19 @@ function startUpload() {
     let request = new XMLHttpRequest();
 
     request.onerror = function() {
-        console.log('An error occurred during the transaction');
+        window.statusText.innerHTML = 'ERROR: http request failed!';
+    }
+
+    request.ontimeout = function() {
+        window.statusText.innerHTML = 'ERROR: Connection timeout!';
     }
 
     request.onreadystatechange = function() {
+        if (this.status == 404) {
+            window.statusText.innerHTML = '404 - Upload URL not found on server';
+            window.fileSelection.value = '';
+        }
+
         if (this.readyState == 4) {
             switch (this.status) {
                 case 200 :
@@ -82,7 +91,7 @@ function startUpload() {
                     window.fileSelection.disabled = false;
                     window.uploadFileButton.disabled = false;
                     break;
-                default : console.log('problemo ' + this.status);
+                default : console.log('http result code: ' + this.status);
             }
         }
     };
@@ -112,7 +121,7 @@ function startUpload() {
     let data = new FormData();
     data.append('file', file);
 
-    window.statusText.innerHTML = 'Starting upload';
+    window.statusText.innerHTML = 'Initializing upload...';
 
     request.send(data);
 }

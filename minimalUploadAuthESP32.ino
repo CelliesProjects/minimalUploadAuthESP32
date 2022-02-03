@@ -47,7 +47,7 @@ void setup() {
     });
 
     // preflight cors check
-    server.on("/api/upload", HTTP_OPTIONS, [](AsyncWebServerRequest * request)
+    server.on("/", HTTP_OPTIONS, [](AsyncWebServerRequest * request)
     {
         AsyncWebServerResponse* response = request->beginResponse(204);
         response->addHeader("Access-Control-Allow-Methods", "PUT,POST,GET,OPTIONS");
@@ -56,7 +56,7 @@ void setup() {
         request->send(response);
     });
 
-    server.on("/api/upload", HTTP_POST, [](AsyncWebServerRequest * request)
+    server.on("/", HTTP_POST, [](AsyncWebServerRequest * request)
     {
         if (request->authenticate(HTTP_USERNAME, HTTP_PASSWORD))
             request->send(200);

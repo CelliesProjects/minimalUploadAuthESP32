@@ -110,8 +110,8 @@ function startUpload() {
         progress.setAttribute('max', 0);
     });
 
-    request.open('POST', '/api/upload');
-    //request.open('POST', 'http://192.168.0.106/api/upload'); //debug/remote running of this page
+    request.open('POST', '/');
+    //request.open('POST', 'http://192.168.0.107/'); //debug/remote running of this page
 
     request.setRequestHeader('Authorization', 'Basic ' + btoa(window.username.value + ":" + window.password.value));
 
